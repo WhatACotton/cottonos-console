@@ -1,4 +1,4 @@
-# cottonos
+# cottonos console
 
 Zynq プロセッサ用組み込み OS「cottonos」のコンソール実装です。
 
