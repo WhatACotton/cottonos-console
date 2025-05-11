@@ -12,6 +12,5 @@ int co_putc(unsigned char c);
 int co_puts(unsigned char *str);
 unsigned char co_getc(void);
 int co_gets(unsigned char *buf);
-int putxval(unsigned long value, int column);
 
 #endif

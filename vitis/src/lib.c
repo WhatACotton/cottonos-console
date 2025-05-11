@@ -81,27 +81,31 @@ int co_strncmp(const char *s1, const char *s2, int len)
 int co_putc(unsigned char c)
 {
     if (c == '\n')
-        putchar('\r');
-    putchar(c);
+    {
+        putchar('\n');
+    }
+    else
+    {
+        putchar(c);
+    }
     fflush(stdout);
     return c;
 }
+#include <stdio.h>
 
 /* １文字受信 */
 unsigned char co_getc(void)
 {
     unsigned char c = getc(stdin);
-    c = (c == '\r') ? '\n' : c;
-    co_putc(c); /* エコー・バック */
-
-    return c;
+    return (c == '\r') ? '\n' : c; // 改行コードを統一
 }
-
 /* 文字列送信 */
 int co_puts(unsigned char *str)
 {
     while (*str)
         co_putc(*(str++));
+    fflush(stdout);
+
     return 0;
 }
 
@@ -109,36 +113,57 @@ int co_puts(unsigned char *str)
 int co_gets(unsigned char *buf)
 {
     int i = 0;
+    int rst_flg = 0;
+    char *special_char;
     unsigned char c;
     do
     {
         c = co_getc();
         if (c == '\n')
+        {
             c = '\0';
-        buf[i++] = c;
+        }
+        else if (c == '\b' || c == 127) // バックスペースまたはDELキー
+        {
+            if (i > 0)
+            {
+                i--;
+                buf[i] = '\0';
+                co_putc('\b'); // カーソルを戻す
+                co_putc(' ');  // 空白で上書き
+                co_putc('\b'); // 再度カーソルを戻す
+            }
+            continue;
+        }
+        else if (c == '\x1b' && (c = co_getc()) == '[') // エスケープシーケンス
+        {
+            c = co_getc(); // さらに次の文字を取得
+            rst_flg = 1;
+            if (c == 'A') // 上矢印キー
+            {
+                // bufferを全てクリア
+                buf[i] = '\0'; // バッファをクリア
+                special_char = "\x1b[A";
+                continue;
+            }
+            else if (c == 'B') // 下矢印キー
+            {
+                buf[i] = '\0'; // バッファをクリア
+                special_char = "\x1b[B";
+                continue;
+            }
+        }
+        else
+        {
+            co_putc(c);
+            buf[i++] = c;
+        }
     } while (c);
-    return i - 1;
-}
-int co_putxval(unsigned long value, int column)
-{
-    char buf[9];
-    char *p;
-
-    p = buf + sizeof(buf) - 1;
-    *(p--) = '\0';
-
-    if (!value && !column)
-        column++;
-
-    while (value || column)
+    if (rst_flg)
     {
-        *(p--) = "0123456789abcdef"[value & 0xf];
-        value >>= 4;
-        if (column)
-            column--;
+        co_memcpy(buf, special_char, co_strlen(special_char));
+        i = co_strlen(special_char);
+        buf[i] = '\0'; // バッファをクリア
     }
-
-    co_puts(p + 1);
-
-    return 0;
+    return i - 1;
 }
