@@ -1,0 +1,12 @@
+{
+  "files.associations": {
+    "*.elf": "plist",
+    "*.scr": "mapfile",
+    "*.spr": "json",
+    "*.ld": "mapfile",
+    "ff.h": "c",
+    "stdlib.h": "c",
+    "xparameters.h": "c",
+    "xil_printf.h": "c"
+  }
+}
