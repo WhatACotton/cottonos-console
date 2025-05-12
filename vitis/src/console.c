@@ -2,85 +2,83 @@
 #include "platform.h"
 #include "xparameters.h"
 #include "lib.h"
-// #include "program.h"
+#include <stdlib.h>
+#include <string.h>
 
-void buf_rst(char *buf, char *last_command)
+void copy_last_command(char *buf, char *last_command)
 {
-    co_memset(last_command, 0, sizeof(last_command));
-    co_strcpy(last_command, buf);
-    // buffer clear
-    co_memset(buf, 0, sizeof(buf));
-    return;
+    memset(last_command, 0, sizeof(last_command));
+    strcpy(last_command, buf);
+}
+
+void buf_rst(char *buf, size_t size)
+{
+    memset(buf, 0, size);
 }
 void print_banner()
 {
-    co_puts("\r\n             __    __                                     \r\n");
-    co_puts("            /\\ \\__/\\ \\__                                  \r\n");
-    co_puts("  ___    ___\\ \\ ,_\\ \\ ,_\\   ___     ___     ___     ____  \r\n");
-    co_puts(" /'___\\ / __`\\ \\ \\/\\ \\ \\/  / __`\\ /' _ `\\  / __`\\  /',__\\ \r\n");
-    co_puts("/\\ \\__//\\ \\L\\ \\ \\ \\_\\ \\ \\_/\\ \\L\\ \\/\\ \\/\\ \\/\\ \\L\\ \\/\\__, `\\\r\n");
-    co_puts("\\ \\____\\ \\____/\\ \\__\\\\ \\__\\ \\____/\\ \\_\\ \\_\\ \\____/\\/\\____/ \r\n");
-    co_puts(" \\/____/\\/___/  \\/__/ \\/__/\\/___/  \\/_/\\/_/\\/___/  \\/___/  \r\n");
-    co_puts("                                                          \r\n");
+    printf("\r\n             __    __                                     \r\n");
+    printf("            /\\ \\__/\\ \\__                                  \r\n");
+    printf("  ___    ___\\ \\ ,_\\ \\ ,_\\   ___     ___     ___     ____  \r\n");
+    printf(" /'___\\ / __`\\ \\ \\/\\ \\ \\/  / __`\\ /' _ `\\  / __`\\  /',__\\ \r\n");
+    printf("/\\ \\__//\\ \\L\\ \\ \\ \\_\\ \\ \\_/\\ \\L\\ \\/\\ \\/\\ \\/\\ \\L\\ \\/\\__, `\\\r\n");
+    printf("\\ \\____\\ \\____/\\ \\__\\\\ \\__\\ \\____/\\ \\_\\ \\_\\ \\____/\\/\\____/ \r\n");
+    printf(" \\/____/\\/___/  \\/__/ \\/__/\\/___/  \\/_/\\/_/\\/___/  \\/___/  \r\n");
+    printf("                                                          \r\n");
 }
 int main()
 {
-
     static char buf[16];
     static char last_command[16] = "";
 
     init_platform();
     print_banner();
-    co_puts("\r\nType commands (Enter exit to stop):\r\n");
+    printf("\r\nType commands (Enter exit to stop):\n");
     while (1)
     {
-        co_puts("cottonos_console > ");
+        printf("cottonos_console > ");
         co_gets(buf);
-        if (!co_strcmp(buf, "\x1b[A")) // 上矢印キー
+
+        if (!strcmp(buf, "\x1b[A")) // 上矢印キー
         {
-            co_puts(last_command);
-            co_strcpy(buf, last_command);
+            strcpy(buf, last_command);
+            printf("%s", buf);
         }
-        if (!co_strcmp(buf, "load"))
+
+        if (!strcmp(buf, "run"))
         {
-            buf_rst(buf, last_command);
-            co_puts("\nload command received.\n\r");
+            printf("\nrun command received.\n");
+            copy_last_command(buf, last_command);
+            buf_rst(buf, sizeof(buf));
         }
-        else if (!strcmp(buf, "dump"))
+        else if (!strcmp(buf, "\0"))
         {
-            buf_rst(buf, last_command);
-            co_puts("\ndump command received.\n\r");
-        }
-        else if (!strcmp(buf, "run"))
-        {
-            buf_rst(buf, last_command);
-            co_puts("\nrun command received.\n\r");
+            printf("\n");
+            buf_rst(buf, sizeof(buf));
         }
         else if (!strcmp(buf, "exit"))
         {
-            buf_rst(buf, last_command);
-            co_puts("\nExiting...\n\r");
+            printf("\nExiting...\n");
             break;
         }
-        else if (!strcmp(buf, "help"))
+        else if (!strcmp(buf, "help") || !strcmp(buf, "?"))
         {
-            buf_rst(buf, last_command);
-            co_puts("\nAvailable commands:\r\n");
-            co_puts("\tload - Load a program\r\n");
-            co_puts("\tdump - Dump memory\r\n");
-            co_puts("\trun  - Run a program\r\n");
-            co_puts("\thelp - Show this help message\r\n");
-            co_puts("\texit - Exit the console\r\n");
+            printf("\nAvailable commands:\n");
+            printf("\trun  - Run a program\n");
+            printf("\thelp - Show this help message\n");
+            printf("\texit - Exit the console\n");
+            copy_last_command(buf, last_command);
+            buf_rst(buf, sizeof(buf));
         }
         else
         {
-            co_puts("\nunknown command:");
-            co_puts(buf);
-            co_puts("\r\n");
-            co_memset(buf, 0, sizeof(buf));
+            printf("\nunknown command: ");
+            printf("%s", buf);
+            printf("\n");
+            buf_rst(buf, sizeof(buf));
         }
     }
-    co_puts("\nFinished receiving characters.\r\n");
+    printf("\nFinish Bootloader.\n");
     cleanup_platform();
     return 0;
 }
